@@ -1,0 +1,41 @@
+{# In templates/product/index.html.twig #}
+
+<h1>Product Search</h1>
+
+<form action="{{ path('search_products') }}" method="get">
+    <div class="form-group">
+        <label for="search">Search</label>
+        <input type="text" id="search" name="search" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+<div class="pagination">
+    {{ knp_pagination_render(pagination) }}
+</div>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Code</th>
+        <th>Description</th>
+        <th>Price</th>
+        <th>Supplier</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for product in products %}
+        <tr>
+            <td>{{ product.code }}</td>
+            <td>{{ product.description }}</td>
+            <td>{{ product.price }}</td>
+            <td>{{ product.supplier.name }}</td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="3">No products found</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div class="pagination">
+    {{ knp_pagination_render(pagination) }}
+</div>

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  symfony:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: symfony-market-price-list
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_PASSWORD: Pwdpostgres022023!*
+      POSTGRES_DB: market-price-list
+      POSTGRES_USER: breizh81
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog-market-price-list
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

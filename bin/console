@@ -3,15 +3,27 @@
 
 use App\Kernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\ErrorHandler\Debug;
 
-if (!is_file(dirname(__DIR__).'/vendor/autoload_runtime.php')) {
-    throw new LogicException('Symfony Runtime is missing. Try running "composer require symfony/runtime".');
+require dirname(__DIR__).'/vendor/autoload.php';
+
+if (class_exists(Application::class)) {
+    $input = new ArgvInput();
+    $env = $input->getParameterOption(['--env', '-e'], $_SERVER['APP_ENV'] ?? 'dev', true);
+    $debug = (bool) ($_SERVER['APP_DEBUG'] ?? ('prod' !== $env)) && !$input->hasParameterOption(['--no-debug', '']);
+
+    if ($debug) {
+        umask(0000);
+        if (class_exists(Debug::class)) {
+            Debug::enable();
+        }
+    }
+
+    $kernel = new Kernel($env, $debug);
+    $application = new Application($kernel);
+    $application->run($input);
+} else {
+    echo 'You need to define the path to your `Kernel` class in the `bin/console` file'.PHP_EOL;
+    exit(1);
 }
-
-require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
-
-return function (array $context) {
-    $kernel = new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
-
-    return new Application($kernel);
-};

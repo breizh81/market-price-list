@@ -12,6 +12,12 @@ services:
       - ./:/var/www/html
     depends_on:
       - db
+      - rabbitmq
+    environment:
+      - DATABASE_URL=pgsql://breizh81:Pwdpostgres022023!*@db:5432/market-price-list?serverVersion=12&charset=utf8
+      - MESSENGER_TRANSPORT_DSN=amqp://guest:guest@rabbitmq:5672/%2f
+      - MESSENGER_TRANSPORT_VHOST=/
+      - MAILER_DSN=smtp://mailhog:1025
     networks:
       - app-network
 
@@ -32,6 +38,18 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-market-price-list
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     networks:
       - app-network
 

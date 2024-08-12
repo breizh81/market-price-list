@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale }}">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>{% block title %}Foodomarket{% endblock %}</title>
+        {% block stylesheets %}
+            {{ encore_entry_link_tags('app') }}
+        {% endblock %}
+        {% block javascripts %}
+            {{ encore_entry_script_tags('app') }}
+        {% endblock %}
+    </head>
+
+    <body id="{% block body_id %}{% endblock %}">
+
+        <div class="container body-container">
+            {% block body %}
+                <div class="row">
+                    <div id="main" class="col-sm-9">
+
+                        {% block main %}{% endblock %}
+                    </div>
+                </div>
+            {% endblock %}
+        </div>
+
+        {% block footer %}
+            <footer>
+                <div class="container">
+                </div>
+            </footer>
+        {% endblock %}
+    </body>
+</html>

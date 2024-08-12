@@ -1,11 +1,5 @@
 {% extends 'base.html.twig' %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>File Import and Validation</title>
-    <script src="{{ asset('path/to/your/javascript/file.js') }}"></script>
-</head>
-<body>
+{% block main %}
 <h1>Import File and Validate</h1>
 
 <form id="importForm">
@@ -33,5 +27,5 @@
 
 <!-- Optional: Display the selected file name -->
 <p id="fileName"></p>
-</body>
-</html>
+
+{% endblock %}

@@ -18,19 +18,21 @@ class ProductController extends AbstractController
     ) {
     }
 
-    #[Route('/products', name: 'search_products', methods: ['GET'])]
-    public function search(Request $request)
+    #[Route('/products', name: 'products', methods: ['GET'])]
+    public function index(Request $request)
     {
-        $keyword = $request->query->get('search');
+        $searchTerm = $request->query->get('search');
 
-        $query = $this->productRepository->searchProducts($keyword);
+        $query = $searchTerm
+            ? $this->productRepository->searchProducts($searchTerm)
+            : $this->productRepository->createQueryBuilderForAll();
 
         $pagination = $this->paginator->paginate(
-            $query, /* query NOT result */
-            $request->query->getInt('page', 1), /* page number */
-            10 /* limit per page */
+            $query,
+            $request->query->getInt('page', 1),
+            10
         );
 
-        return $this->render('product/index.html.twig', ['pagination' => $pagination]);
+        return $this->render('product/index.html.twig', ['paginatedProducts' => $pagination]);
     }
 }

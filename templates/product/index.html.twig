@@ -1,8 +1,8 @@
-{# In templates/product/index.html.twig #}
-
+{% extends 'base.html.twig' %}
+{% block main %}
 <h1>Product Search</h1>
 
-<form action="{{ path('search_products') }}" method="get">
+<form action="{{ path('products') }}" method="get">
     <div class="form-group">
         <label for="search">Search</label>
         <input type="text" id="search" name="search" class="form-control">
@@ -10,7 +10,7 @@
     <button type="submit" class="btn btn-primary">Filter</button>
 </form>
 <div class="pagination">
-    {{ knp_pagination_render(pagination) }}
+    {{ knp_pagination_render(paginatedProducts) }}
 </div>
 <table class="table">
     <thead>
@@ -22,7 +22,7 @@
     </tr>
     </thead>
     <tbody>
-    {% for product in products %}
+    {% for product in paginatedProducts %}
         <tr>
             <td>{{ product.code }}</td>
             <td>{{ product.description }}</td>
@@ -37,5 +37,6 @@
     </tbody>
 </table>
 <div class="pagination">
-    {{ knp_pagination_render(pagination) }}
+    {{ knp_pagination_render(paginatedProducts) }}
 </div>
+{% endblock %}

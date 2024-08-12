@@ -1,4 +1,4 @@
-.PHONY: bash-root composer-install help install start stop restart add-migrations quality-checks
+.PHONY: bash-root composer-install help install start stop restart add-migrations quality-checks assets dev encoredev encoreprod stopwatch npm-install
 .DEFAULT_GOAL := help
 
 CONTAINER_NAME = symfony-market-price-list
@@ -15,6 +15,7 @@ PHP_CSFIXER_BIN = vendor/bin/php-cs-fixer
 PHP_INSIGHTS_BIN = vendor/bin/phpinsights
 PHPSTAN_BIN = vendor/bin/phpstan
 PHPCS_BIN = vendor/bin/phpcs
+PHPCS_CODESNIFFERFIX_BIN = vendor/bin/phpcbf
 PSALM_BIN = vendor/bin/psalm
 
 get-container-id:
@@ -39,8 +40,6 @@ cache-clear:
 phpunit:
 	$(DOCKER_ROOT) vendor/bin/phpunit
 
-install: composer-install
-
 quality-checks: phpcs sniff phpstan psalm phpinsights
 
 phpcs-fix-dry-run:
@@ -49,8 +48,11 @@ phpcs-fix-dry-run:
 phpcs-fix:
 	$(DOCKER_ROOT) $(PHP_CSFIXER_BIN) fix
 
-phpcs:
+codesniffer-check:
 	$(DOCKER_ROOT) $(PHPCS_BIN) --standard=phpcs.xml
+
+codesniffer-fix:
+	$(DOCKER_ROOT) $(PHPCS_CODESNIFFERFIX_BIN) --standard=phpcs.xml
 
 phpstan:
 	$(DOCKER_ROOT) $(PHPSTAN_BIN) analyse
@@ -62,16 +64,41 @@ phpinsights:
 	$(DOCKER_ROOT) $(PHP_INSIGHTS_BIN)
 
 start: ## Start the project
-	docker-compose up -d --build
+	docker compose up -d --build
 	@echo "$(OK_STRING) The web app should be accessible on http://localhost:8000"
 
 stop: ## Stop the project
-	docker-compose down --remove-orphans
+	docker compose down --remove-orphans
 
 restart: stop start
 
 add-migrations:
-	$(DOCKER_ROOT) php bin/console doctrine:migrations:migrate --no-interaction
+	$(DOCKER_ROOT) bin/console doctrine:migrations:migrate --no-interaction
+
+add-fixtures:
+	$(DOCKER_ROOT) bin/console doctrine:fixtures:load --no-interaction
+
+npm-install: ## Install nodejs dependencies
+	$(DOCKER_ROOT) npm install
+
+assets: ## Build dev assets
+	$(DOCKER_ROOT) npm run dev
+
+encoredev: ## Build dev assets using Encore
+	$(DOCKER_ROOT) ./node_modules/.bin/encore dev
+
+encoreprod: ## Build production assets using Encore
+	$(DOCKER_ROOT) ./node_modules/.bin/encore production
+
+stopwatch: ## Watch and build assets in real-time using Encore
+	$(DOCKER_ROOT) ./node_modules/.bin/encore dev --watch
+
+consumer-logs:
+	docker exec -ti $(DOCKER_CONTAINER_ID) tail -f /var/log/supervisor/messenger_consumer.log
+
+webserver-logs:
+	docker exec -ti $(DOCKER_CONTAINER_ID) tail -f /var/log/supervisor/php.log
+
 
 help:
 	@grep -E '(^[a-zA-Z_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'

@@ -10,7 +10,8 @@ class ProductDTO
         private readonly string $description,
         private readonly string $code,
         private readonly float $price,
-        private readonly SupplierDTO $supplierDTO
+        private readonly SupplierDTO $supplierDTO,
+        private readonly ImportBatchDTO $importBatchDTO
     ) {
     }
 
@@ -34,8 +35,13 @@ class ProductDTO
         return $this->supplierDTO;
     }
 
+    public function getImportBatchDTO(): ImportBatchDTO
+    {
+        return $this->importBatchDTO;
+    }
+
     public static function fromArray(array $data): self
     {
-        return new self($data[0], $data[1], (float) $data[2], $data['supplierDTO']);
+        return new self($data[0], $data[1], (float) $data[2], $data['supplierDTO'], $data['importBatchDTO']);
     }
 }

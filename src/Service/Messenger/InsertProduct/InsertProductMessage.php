@@ -8,12 +8,19 @@ use App\DTO\ProductDTO;
 
 class InsertProductMessage
 {
-    public function __construct(private readonly ProductDTO $product)
-    {
+    public function __construct(
+        private readonly ProductDTO $product,
+        private readonly int $importBatchId
+    ) {
     }
 
     public function getProduct(): ProductDTO
     {
         return $this->product;
+    }
+
+    public function getImportBatchId(): int
+    {
+        return $this->importBatchId;
     }
 }

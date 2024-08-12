@@ -6,7 +6,8 @@ namespace App\Repository;
 
 use App\Entity\Product;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\DBAL\Query;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -31,12 +32,15 @@ class ProductRepository extends ServiceEntityRepository
 
     public function searchProducts(string $keyword): Query
     {
-        $queryBuilder = $this->createQueryBuilder('p')
+        return $this->createQueryBuilder('p')
             ->where('p.description LIKE :keyword')
             ->orWhere('p.code LIKE :keyword')
             ->setParameter('keyword', '%'.$keyword.'%')
             ->getQuery();
+    }
 
-        return $queryBuilder;
+    public function createQueryBuilderForAll(): QueryBuilder
+    {
+        return $this->createQueryBuilder('p');
     }
 }

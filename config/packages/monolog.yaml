@@ -1,0 +1,30 @@
+# config/packages/monolog.yaml
+monolog:
+    handlers:
+        # Main log file
+        main:
+            type: stream
+            path: '%kernel.logs_dir%/%kernel.environment%.log'
+            level: debug
+            formatter: monolog.formatter.line
+
+        # Error log file
+        error_log:
+            type: stream
+            path: '%kernel.logs_dir%/error.log'
+            level: error
+            formatter: monolog.formatter.line
+
+        # Messenger log file
+        messenger:
+            type: stream
+            path: '%kernel.logs_dir%/messenger.log'
+            level: info
+            formatter: monolog.formatter.line
+
+        # Doctrine log file
+        doctrine:
+            type: stream
+            path: '%kernel.logs_dir%/doctrine.log'
+            level: error
+            formatter: monolog.formatter.line

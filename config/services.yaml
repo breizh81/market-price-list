@@ -4,7 +4,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    allowed_file_types: ['csv', 'xml']
+    allowed_file_types: ['csv']
+    target_directory: '%env(FILE_UPLOAD_DIRECTORY)%'
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -21,12 +22,30 @@ services:
             - '../src/Kernel.php'
             - '../src/Dto/'
     app.csv_importer:
-        class: CsvImporter
-        tags: [ 'app.importer' ]
+        class: App\Service\Importer\ProductImporter\CsvImporter
+        tags:
+            - 'app.importer'
 
     App\Service\File\FileUploader:
         arguments:
-            $targetDirectory: '%env(FILE_UPLOAD_DIRECTORY)%'
+            $targetDirectory: '%target_directory%'
+            $allowedFileTypes: '%allowed_file_types%'
+            $logger: '@logger'
+
+    App\Service\File\FileImporter:
+        calls:
+            - setImporters: [ !tagged_iterator 'app.importer' ]
+
+    App\Service\Mailer\Upload\UploadEmail:
+        arguments:
+            $mailer: '@mailer.mailer'
+            $logger: '@logger'
+            $senderEmail: '%env(MAILER_SENDER_EMAIL)%'
+            $recipientEmail: '%env(MAILER_RECIPIENT_EMAIL)%'
+
+    App\EventSubscriber\MessageHandledSubscriber:
+        tags:
+            - { name: 'kernel.event_subscriber' }
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

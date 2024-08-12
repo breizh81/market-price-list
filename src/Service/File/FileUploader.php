@@ -13,8 +13,8 @@ class FileUploader
 {
     public function __construct(
         private readonly string $targetDirectory,
-        private readonly LoggerInterface $logger,
-        private readonly array $allowedFileTypes
+        private readonly array $allowedFileTypes,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -25,6 +25,11 @@ class FileUploader
             $fileType = $this->detect($file->getClientOriginalName());
 
             $this->validateFileType($fileType);
+
+            if (!is_dir($this->targetDirectory)) {
+                mkdir($this->targetDirectory, 0755, true);
+            }
+
             $file->move($this->targetDirectory, $newFileName);
 
             return $this->targetDirectory.\DIRECTORY_SEPARATOR.$newFileName;

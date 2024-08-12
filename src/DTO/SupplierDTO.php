@@ -8,7 +8,7 @@ use App\Entity\Supplier;
 
 class SupplierDTO
 {
-    public function __construct(private readonly string $name)
+    public function __construct(private readonly string $name, private readonly int $id)
     {
     }
 
@@ -17,8 +17,13 @@ class SupplierDTO
         return $this->name;
     }
 
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
     public static function fromEntity(Supplier $supplier): self
     {
-        return new self($supplier->getName());
+        return new self($supplier->getName(), $supplier->getId());
     }
 }

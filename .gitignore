@@ -38,6 +38,7 @@
 # PHPUnit
 /app/phpunit.xml
 /phpunit.xml
+.phpunit.result.cache
 
 # Build data
 /build/
@@ -50,16 +51,18 @@
 
 # Embedded web-server pid file
 /.web-server-pid
+/.env
+/.idea/
 
-###> phpunit/phpunit ###
-/phpunit.xml
-.phpunit.result.cache
-###< phpunit/phpunit ###
-
-###> symfony/phpunit-bridge ###
-.phpunit.result.cache
-/phpunit.xml
-###< symfony/phpunit-bridge ###
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/uploads/
+###< symfony/framework-bundle ###
 
 ###> symfony/asset-mapper ###
 /public/assets/

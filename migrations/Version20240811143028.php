@@ -14,32 +14,54 @@ final class Version20240811143028 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return '';
+        return 'Initial migration to create tables and sequences';
     }
 
     public function up(Schema $schema): void
     {
-        // this up() migration is auto-generated, please modify it to your needs
+        // Create sequences
         $this->addSql('CREATE SEQUENCE import_batch_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE product_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE supplier_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
-        $this->addSql('CREATE TABLE import_batch (id INT NOT NULL, is_completed BOOLEAN NOT NULL, total_messages INT NOT NULL, processed_messages INT NOT NULL, PRIMARY KEY(id))');
-        $this->addSql('CREATE TABLE product (id INT NOT NULL, supplier_id INT NOT NULL, code VARCHAR(6) NOT NULL, description TEXT NOT NULL, price DOUBLE PRECISION NOT NULL, PRIMARY KEY(id))');
+
+        // Create tables
+        $this->addSql('CREATE TABLE import_batch (
+            id INT NOT NULL DEFAULT nextval(\'import_batch_id_seq\'),
+            is_completed BOOLEAN NOT NULL,
+            total_messages INT NOT NULL,
+            processed_messages INT NOT NULL,
+            PRIMARY KEY(id)
+        )');
+        $this->addSql('CREATE TABLE product (
+            id INT NOT NULL DEFAULT nextval(\'product_id_seq\'),
+            supplier_id INT NOT NULL,
+            code VARCHAR(6) NOT NULL,
+            description TEXT NOT NULL,
+            price DOUBLE PRECISION NOT NULL,
+            PRIMARY KEY(id)
+        )');
+        $this->addSql('CREATE TABLE supplier (
+            id INT NOT NULL DEFAULT nextval(\'supplier_id_seq\'),
+            name VARCHAR(255) NOT NULL,
+            PRIMARY KEY(id)
+        )');
+
+        // Create indexes and foreign key constraints
         $this->addSql('CREATE INDEX IDX_D34A04AD2ADD6D8C ON product (supplier_id)');
-        $this->addSql('CREATE TABLE supplier (id INT NOT NULL, name VARCHAR(255) NOT NULL, PRIMARY KEY(id))');
         $this->addSql('ALTER TABLE product ADD CONSTRAINT FK_D34A04AD2ADD6D8C FOREIGN KEY (supplier_id) REFERENCES supplier (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
     }
 
     public function down(Schema $schema): void
     {
-        // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE SCHEMA public');
-        $this->addSql('DROP SEQUENCE import_batch_id_seq CASCADE');
-        $this->addSql('DROP SEQUENCE product_id_seq CASCADE');
-        $this->addSql('DROP SEQUENCE supplier_id_seq CASCADE');
+        // Drop constraints and tables
         $this->addSql('ALTER TABLE product DROP CONSTRAINT FK_D34A04AD2ADD6D8C');
         $this->addSql('DROP TABLE import_batch');
         $this->addSql('DROP TABLE product');
         $this->addSql('DROP TABLE supplier');
+
+        // Drop sequences
+        $this->addSql('DROP SEQUENCE import_batch_id_seq CASCADE');
+        $this->addSql('DROP SEQUENCE product_id_seq CASCADE');
+        $this->addSql('DROP SEQUENCE supplier_id_seq CASCADE');
     }
 }

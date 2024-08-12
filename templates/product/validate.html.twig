@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Product Validation{% endblock %}
+
+{% block main %}
+    <h1>Product Validation</h1>
+
+    {% if pagination.totalItemCount > 0 %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Supplier</th>
+                <th>Current State</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for product in pagination %}
+                <tr>
+                    <td>{{ product.id }}</td>
+                    <td>{{ product.code }}</td>
+                    <td>{{ product.description }}</td>
+                    <td>{{ product.price | number_format(2, '.', ',') }} €</td>
+                    <td>{{ product.supplier.name }}</td>
+                    <td>
+                        {{ markings[product.id] }}
+                    </td>
+                    <td>
+                        <!-- Form for Validate Action -->
+                        <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('validate_' ~ product.id) }}">
+                            <input type="hidden" name="action" value="validate">
+                            <button type="submit" class="btn btn-success">Validate</button>
+                        </form>
+
+                        <!-- Form for Reject Action -->
+                        <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('reject_' ~ product.id) }}">
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-danger">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            {{ knp_pagination_render(pagination) }}
+        </div>
+    {% else %}
+        <p>No products to validate.</p>
+    {% endif %}
+{% endblock %}

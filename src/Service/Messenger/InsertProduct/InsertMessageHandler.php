@@ -1,12 +1,15 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Service\Messenger\InsertProduct;
 
-use App\Entity\Product;
 use App\Entity\Supplier;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Enum\ProductState;
+use App\Exception\ProductProcessingException;
+use App\Factory\ProductFactory;
+use App\Service\Provider\ProductProvider;
+use App\Service\Provider\SupplierProvider;
+use App\Service\Workflow\ProductCoordinator;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
@@ -14,8 +17,11 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 class InsertMessageHandler
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly LoggerInterface $logger
+        private readonly ProductFactory $productFactory,
+        private readonly ProductCoordinator $workflowCoordinator,
+        private readonly LoggerInterface $logger,
+        private readonly SupplierProvider $supplierProvider,
+        private readonly ProductProvider $productProvider
     ) {
     }
 
@@ -24,58 +30,62 @@ class InsertMessageHandler
         $productDto = $message->getProduct();
         $supplierDto = $productDto->getSupplierDTO();
 
-        $this->logger->debug('Attempting to find supplier', [
-            'supplier_id' => $supplierDto->getId(),
-            'supplier_name' => $supplierDto->getName(),
-        ]);
-
-        $supplier = $this->entityManager->getRepository(Supplier::class)
-            ->findOneBy(['id' => $supplierDto->getId()]);
-
-        if (!$supplier instanceof Supplier) {
-            $this->logger->error('Supplier not found', [
-                'supplier_name' => $supplierDto->getName(),
-                'product_code' => $productDto->getCode(),
-            ]);
-
-            return;
-        }
-
-        $this->logger->debug('Supplier found', [
-            'supplier_name' => $supplier->getName(),
-        ]);
-
-        $product = $this->entityManager->getRepository(Product::class)
-            ->findOneBy(['code' => $productDto->getCode()]);
-
-        if (!$product instanceof Product) {
-            $product = new Product();
-            $this->logger->debug('Creating new product', [
-                'product_code' => $productDto->getCode(),
-            ]);
-        } else {
-            $this->logger->debug('Updating existing product', [
-                'product_code' => $productDto->getCode(),
-            ]);
-        }
-
-        $product
-            ->setDescription($productDto->getDescription())
-            ->setCode($productDto->getCode())
-            ->setPrice($productDto->getPrice())
-            ->setSupplier($supplier);
-
         try {
-            $this->entityManager->persist($product);
-            $this->entityManager->flush();
+            $supplier = $this->supplierProvider->findSupplier($supplierDto);
+
+            if (!$supplier instanceof Supplier) {
+                $this->logger->error('Supplier not found', [
+                    'supplier_name' => $supplierDto->getName(),
+                    'product_code' => $productDto->getCode(),
+                ]);
+
+                return;
+            }
+
+            $product = $this->productProvider->findByCode($productDto->getCode());
+
+            if ($product) {
+                $this->productFactory->update($product, $productDto->getDescription(), $productDto->getPrice());
+
+                if (ProductState::VALID === $product->getState() || ProductState::INVALID === $product->getState()) {
+                    $this->workflowCoordinator->transitionToValidating($product);
+                }
+
+                $this->logger->debug('Updating existing product', [
+                    'product_code' => $productDto->getCode(),
+                ]);
+
+                $this->productFactory->save();
+            } else {
+                $product = $this->productFactory->create(
+                    $productDto->getCode(),
+                    $productDto->getDescription(),
+                    $productDto->getPrice(),
+                    $supplier
+                );
+
+                $this->productFactory->persist($product);
+
+                $this->logger->debug('Creating new product', [
+                    'product_code' => $productDto->getCode(),
+                ]);
+            }
+
             $this->logger->info('Product successfully saved', [
                 'product_code' => $productDto->getCode(),
             ]);
         } catch (\Exception $e) {
-            $this->logger->error('Failed to save product', [
+            $this->logger->error('Unexpected error while processing product', [
                 'product_code' => $productDto->getCode(),
                 'error' => $e->getMessage(),
             ]);
+
+            throw new ProductProcessingException(
+                'Unexpected error occurred while processing the product',
+            $productDto->getCode(),
+                0,
+                $e
+            );
         }
     }
 }

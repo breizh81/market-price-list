@@ -76,19 +76,31 @@ class MessageHandledSubscriber implements EventSubscriberInterface
 
     private function finalizeMessageProcessing(InsertProductMessage $message): void
     {
+
         $importBatchId = $message->getImportBatchId();
         $importBatch = $this->importBatchRepository->find($importBatchId);
 
         if ($importBatch) {
+            $this->logger->debug('Import batch before ProcessedMessages', [
+                'import_batch_id' => $importBatchId,
+                'total_count' => $importBatch->getTotalMessages(),
+                'processed_count' => $importBatch->getProcessedMessages()
+            ]);
+
             $importBatch->incrementProcessedMessages();
+
+            $this->logger->debug('Import batch after ProcessedMessages', [
+                'import_batch_id' => $importBatchId,
+                'total_count' => $importBatch->getTotalMessages(),
+                'processed_count' => $importBatch->getProcessedMessages()
+            ]);
 
             if ($importBatch->getProcessedMessages() === $importBatch->getTotalMessages()) {
                 $importBatch->markAsCompleted();
                 $importBatchDTO = ImportBatchDTO::fromEntity($importBatch);
                 $this->dispatchCompletionNotification($importBatchDTO);
-                $this->importBatchRepository->save($importBatch);
             }
-
+            $this->importBatchRepository->save($importBatch);
             $this->logger->debug('Updated import batch after message handling.', [
                 'import_batch_id' => $importBatchId,
                 'total_count' => $importBatch->getTotalMessages(),

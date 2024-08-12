@@ -1,10 +1,10 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Repository;
 
 use App\Entity\Product;
+use App\Enum\ProductState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
@@ -32,11 +32,21 @@ class ProductRepository extends ServiceEntityRepository
 
     public function searchProducts(string $keyword): Query
     {
+        $keyword = strtolower($keyword);
+
         return $this->createQueryBuilder('p')
-            ->where('p.description LIKE :keyword')
-            ->orWhere('p.code LIKE :keyword')
+            ->where('LOWER(p.description) LIKE :keyword')
+            ->orWhere('LOWER(p.code) LIKE :keyword')
             ->setParameter('keyword', '%'.$keyword.'%')
             ->getQuery();
+    }
+
+    public function getProductsForValidationQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.state = :state')
+            ->setParameter('state', ProductState::NEW)
+            ->orderBy('p.id', 'ASC');
     }
 
     public function createQueryBuilderForAll(): QueryBuilder

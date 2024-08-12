@@ -21,6 +21,7 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
             - '../src/Dto/'
+
     app.csv_importer:
         class: App\Service\Importer\ProductImporter\CsvImporter
         tags:
@@ -43,9 +44,19 @@ services:
             $senderEmail: '%env(MAILER_SENDER_EMAIL)%'
             $recipientEmail: '%env(MAILER_RECIPIENT_EMAIL)%'
 
+    App\Service\Workflow\ProductCoordinator:
+        arguments:
+            $productValidationStateMachine: '@workflow.product_validation_state_machine'
+
+    workflow.product_validation_state_machine:
+        class: Symfony\Component\Workflow\StateMachine
+        arguments:
+            $definition: '@state_machine.product_validation.definition'
+
     App\EventSubscriber\MessageHandledSubscriber:
         tags:
             - { name: 'kernel.event_subscriber' }
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    App\Service\Workflow\ProductMarkingCoordinator:
+        arguments:
+            $productValidationStateMachine: '@workflow.product_validation_state_machine'

@@ -1,9 +1,9 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\ProductState;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -40,6 +40,12 @@ class Product implements IdentifiableEntityInterface
     #[ORM\ManyToOne(inversedBy: 'products')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Supplier $supplier = null;
+
+    #[ORM\Column(type: 'product_state', length: 10)]
+    private ProductState $state;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $marking = null;
 
     public function getId(): ?int
     {
@@ -90,6 +96,29 @@ class Product implements IdentifiableEntityInterface
     public function setSupplier(?Supplier $supplier): static
     {
         $this->supplier = $supplier;
+
+        return $this;
+    }
+
+    public function getState(): ProductState
+    {
+        return $this->state;
+    }
+
+    public function setState(ProductState $state): static
+    {
+        $this->state = $state;
+        return $this;
+    }
+
+    public function getMarking(): ?string
+    {
+        return $this->marking;
+    }
+
+    public function setMarking(?string $marking): static
+    {
+        $this->marking = $marking;
 
         return $this;
     }

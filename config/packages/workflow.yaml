@@ -1,0 +1,25 @@
+framework:
+    workflows:
+        product_validation:
+            type: 'state_machine'
+            marking_store:
+                type: method
+                property: 'marking'
+            initial_marking: 'new'
+            supports:
+                - App\Entity\Product
+            places:
+                - new
+                - validating
+                - valid
+                - invalid
+            transitions:
+                validate:
+                    from: new
+                    to: validating
+                approve:
+                    from: validating
+                    to: valid
+                reject:
+                    from: validating
+                    to: invalid

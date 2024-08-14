@@ -8,4 +8,4 @@ framework:
                     vhost: '%env(MESSENGER_TRANSPORT_VHOST)%'
         routing:
             'App\Service\Messenger\InsertProduct\InsertProductMessage': async
-            'App\Service\Messenger\SendEmailImportBatch\SendEmailMessage': async
+            'App\MessageHandler\SendEmailImportBatchMessage': async

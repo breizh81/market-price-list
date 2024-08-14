@@ -4,7 +4,7 @@ framework:
             type: 'state_machine'
             marking_store:
                 type: method
-                property: 'marking'
+                property: 'state'
             initial_marking: 'new'
             supports:
                 - App\Entity\Product

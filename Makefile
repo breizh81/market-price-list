@@ -40,7 +40,10 @@ cache-clear:
 phpunit:
 	$(DOCKER_ROOT) vendor/bin/phpunit
 
-quality-checks: phpcs sniff phpstan psalm phpinsights
+phpunit-coverage:
+	$(DOCKER_ROOT) vendor/bin/phpunit --coverage-html build/coverage
+
+quality-checks: phpcs sniff phpstan
 
 phpcs-fix-dry-run:
 	$(DOCKER_ROOT) $(PHP_CSFIXER_BIN) fix --dry-run
@@ -56,12 +59,6 @@ codesniffer-fix:
 
 phpstan:
 	$(DOCKER_ROOT) $(PHPSTAN_BIN) analyse
-
-psalm:
-	$(DOCKER_ROOT) $(PSALM_BIN) --show-info=true
-
-phpinsights:
-	$(DOCKER_ROOT) $(PHP_INSIGHTS_BIN)
 
 start: ## Start the project
 	docker compose up -d --build
@@ -87,10 +84,7 @@ assets: ## Build dev assets
 encoredev: ## Build dev assets using Encore
 	$(DOCKER_ROOT) ./node_modules/.bin/encore dev
 
-encoreprod: ## Build production assets using Encore
-	$(DOCKER_ROOT) ./node_modules/.bin/encore production
-
-stopwatch: ## Watch and build assets in real-time using Encore
+encorewatch: ## Watch and build assets in real-time using Encore
 	$(DOCKER_ROOT) ./node_modules/.bin/encore dev --watch
 
 consumer-logs:

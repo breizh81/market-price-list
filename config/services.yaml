@@ -27,13 +27,13 @@ services:
         tags:
             - 'app.importer'
 
-    App\Service\File\FileUploader:
+    App\Service\File\ProductFileUploader:
         arguments:
             $targetDirectory: '%target_directory%'
             $allowedFileTypes: '%allowed_file_types%'
             $logger: '@logger'
 
-    App\Service\File\FileImporter:
+    App\Service\File\ProductFileImporter:
         calls:
             - setImporters: [ !tagged_iterator 'app.importer' ]
 
@@ -53,7 +53,7 @@ services:
         arguments:
             $definition: '@state_machine.product_validation.definition'
 
-    App\EventSubscriber\MessageHandledSubscriber:
+    App\EventSubscriber\MessageHandlerSubscriber:
         tags:
             - { name: 'kernel.event_subscriber' }
 

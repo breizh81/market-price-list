@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Factory;
@@ -10,7 +11,9 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class ProductFactory
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager) {}
+    public function __construct(private readonly EntityManagerInterface $entityManager)
+    {
+    }
 
     public function create(
         string $code,
@@ -35,14 +38,9 @@ class ProductFactory
             ->setPrice($price);
     }
 
-    public function persist(Product $product): void
+    public function save(Product $product): void
     {
         $this->entityManager->persist($product);
-        $this->entityManager->flush();
-    }
-
-    public function save(): void
-    {
         $this->entityManager->flush();
     }
 }

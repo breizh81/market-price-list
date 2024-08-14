@@ -54,6 +54,9 @@ RUN mkdir -p /var/www/html/uploads && \
     chown -R www-data:www-data /var/www/html/uploads && \
     chmod -R 755 /var/www/html/uploads
 
+# Set environment variables (if needed)
+ENV SYMFONY_ENV=dev
+
 # Copy the rest of the application code
 COPY . .
 

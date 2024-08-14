@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -14,9 +15,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\InvalidCsrfTokenException;
-use Symfony\Component\Security\Csrf\CsrfToken;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 class ProductController extends AbstractController
 {
@@ -24,7 +22,6 @@ class ProductController extends AbstractController
         private readonly ProductRepository $productRepository,
         private readonly ProductCoordinator $workflowCoordinator,
         private readonly EntityManagerInterface $entityManager,
-        private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly ProductMarkingCoordinator $productMarkingCoordinator,
         private readonly ProductPaginator $productPaginator
     ) {
@@ -33,14 +30,14 @@ class ProductController extends AbstractController
     #[Route('/products', name: 'products', methods: ['GET'])]
     public function index(Request $request): Response
     {
-        $searchTerm = $request->query->get('search');
+        $searchTerm = (string) $request->query->get('search', '');
 
-        $query = $searchTerm
+        $queryBuilder = $searchTerm
             ? $this->productRepository->searchProducts($searchTerm)
-            : $this->productRepository->createQueryBuilderForAll();
+            : $this->productRepository->getProductsValidQueryBuilder();
 
         $pagination = $this->productPaginator->paginate(
-            $query,
+            $queryBuilder,
             $request->query->getInt('page', 1),
             10
         );
@@ -51,30 +48,32 @@ class ProductController extends AbstractController
     #[Route('/products/validate', name: 'product_validate')]
     public function validateProducts(Request $request): Response
     {
-        $queryBuilder = $this->productRepository->getProductsForValidationQueryBuilder();
-        $pagination = $this->productPaginator->paginate(
-            $queryBuilder,
+        $queryBuilderToValidate = $this->productRepository->getProductsForValidationQueryBuilder();
+        $paginationToValidate = $this->productPaginator->paginate(
+            $queryBuilderToValidate,
+            $request->query->getInt('page', 1),
+            10
+        );
+
+        $queryBuilderToApproveOrReject = $this->productRepository->getProductsForApprovalOrRejectionQueryBuilder();
+        $paginationToApproveOrReject = $this->productPaginator->paginate(
+            $queryBuilderToApproveOrReject,
             $request->query->getInt('page', 1),
             10
         );
 
         return $this->render('product/validate.html.twig', [
-            'pagination' => $pagination,
-            'markings' => $this->productMarkingCoordinator->getProductMarkings($pagination->getItems()),
+            'productsToValidate' => $paginationToValidate,
+            'productsToApproveOrReject' => $paginationToApproveOrReject,
+            'markings' => $this->productMarkingCoordinator
+                ->getProductMarkings($paginationToApproveOrReject->getItems()),
         ]);
     }
 
     #[Route('/products/{id}/validate', name: 'product_validate_action', methods: ['POST'])]
     public function validateAction(Product $product, Request $request): Response
     {
-        $token = $request->request->get('_csrf_token');
-
-        if (!$this->csrfTokenManager->isTokenValid(new CsrfToken('validate_' . $request->get('id'), $token))) {
-            $this->addFlash('error', 'Invalid CSRF token');
-            throw new InvalidCsrfTokenException('Invalid CSRF token');
-        }
-
-        $action = $request->request->get('action');
+        $action = $request->request->get('action', '');
 
         try {
             switch ($action) {

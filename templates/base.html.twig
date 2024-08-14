@@ -13,7 +13,7 @@
 </head>
 
 <body>
-
+{% include 'partials/navigation.html.twig' %}
 <div class="container body-container">
     {% block body %}
 
@@ -49,8 +49,8 @@
 </div>
 
 {% block footer %}
-    <footer class="footer mt-auto py-3">
-        <div class="container text-center">
+    <footer class="container">
+        <div class="footer">
             <span class="text-muted">© {{ "now"|date("Y") }} Foodomarket. All rights reserved.</span>
         </div>
     </footer>

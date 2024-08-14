@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Service\Messenger\InsertProduct;
@@ -14,7 +15,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
-class InsertMessageHandler
+class InsertProductMessageHandler
 {
     public function __construct(
         private readonly ProductFactory $productFactory,
@@ -55,7 +56,7 @@ class InsertMessageHandler
                     'product_code' => $productDto->getCode(),
                 ]);
 
-                $this->productFactory->save();
+                $this->productFactory->save($product);
             } else {
                 $product = $this->productFactory->create(
                     $productDto->getCode(),
@@ -64,7 +65,7 @@ class InsertMessageHandler
                     $supplier
                 );
 
-                $this->productFactory->persist($product);
+                $this->productFactory->save($product);
 
                 $this->logger->debug('Creating new product', [
                     'product_code' => $productDto->getCode(),
@@ -82,7 +83,7 @@ class InsertMessageHandler
 
             throw new ProductProcessingException(
                 'Unexpected error occurred while processing the product',
-            $productDto->getCode(),
+                $productDto->getCode(),
                 0,
                 $e
             );

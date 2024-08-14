@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Entity;
@@ -10,12 +11,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 #[ORM\Table(name: 'product')]
-class Product implements IdentifiableEntityInterface
+class Product
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    // @phpstan-ignore-next-line
+    private int $id;
 
     #[ORM\Column(type: 'string', length: 6)]
     #[
@@ -47,7 +49,7 @@ class Product implements IdentifiableEntityInterface
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $marking = null;
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
@@ -108,6 +110,7 @@ class Product implements IdentifiableEntityInterface
     public function setState(ProductState $state): static
     {
         $this->state = $state;
+
         return $this;
     }
 

@@ -1,20 +1,21 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\EventSubscriber;
 
 use App\DTO\ImportBatchDTO;
+use App\MessageHandler\SendEmailImportBatchMessage;
 use App\Repository\ImportBatchRepository;
 use App\Service\Messenger\InsertProduct\InsertProductMessage;
-use App\Service\Messenger\SendEmailImportBatch\SendEmailMessage;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Messenger\Event\WorkerMessageReceivedEvent;
-use Symfony\Component\Messenger\Event\WorkerMessageHandledEvent;
 use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
+use Symfony\Component\Messenger\Event\WorkerMessageHandledEvent;
+use Symfony\Component\Messenger\Event\WorkerMessageReceivedEvent;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-class MessageHandledSubscriber implements EventSubscriberInterface
+class MessageHandlerSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private readonly ImportBatchRepository $importBatchRepository,
@@ -41,7 +42,6 @@ class MessageHandledSubscriber implements EventSubscriberInterface
                 'import_batch_id' => $message->getImportBatchId(),
             ]);
 
-            // Track the batch progress in the database
             $importBatch = $this->importBatchRepository->find($message->getImportBatchId());
             if ($importBatch) {
                 $this->importBatchRepository->save($importBatch);
@@ -76,7 +76,6 @@ class MessageHandledSubscriber implements EventSubscriberInterface
 
     private function finalizeMessageProcessing(InsertProductMessage $message): void
     {
-
         $importBatchId = $message->getImportBatchId();
         $importBatch = $this->importBatchRepository->find($importBatchId);
 
@@ -84,7 +83,7 @@ class MessageHandledSubscriber implements EventSubscriberInterface
             $this->logger->debug('Import batch before ProcessedMessages', [
                 'import_batch_id' => $importBatchId,
                 'total_count' => $importBatch->getTotalMessages(),
-                'processed_count' => $importBatch->getProcessedMessages()
+                'processed_count' => $importBatch->getProcessedMessages(),
             ]);
 
             $importBatch->incrementProcessedMessages();
@@ -92,7 +91,7 @@ class MessageHandledSubscriber implements EventSubscriberInterface
             $this->logger->debug('Import batch after ProcessedMessages', [
                 'import_batch_id' => $importBatchId,
                 'total_count' => $importBatch->getTotalMessages(),
-                'processed_count' => $importBatch->getProcessedMessages()
+                'processed_count' => $importBatch->getProcessedMessages(),
             ]);
 
             if ($importBatch->getProcessedMessages() === $importBatch->getTotalMessages()) {
@@ -112,6 +111,6 @@ class MessageHandledSubscriber implements EventSubscriberInterface
 
     private function dispatchCompletionNotification(ImportBatchDTO $importBatchDTO): void
     {
-        $this->messageBus->dispatch(new SendEmailMessage($importBatchDTO));
+        $this->messageBus->dispatch(new SendEmailImportBatchMessage($importBatchDTO));
     }
 }

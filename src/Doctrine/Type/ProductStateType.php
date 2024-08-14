@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Doctrine\Type;
@@ -13,14 +14,15 @@ class ProductStateType extends StringType
 
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
-        return "VARCHAR(10)";
+        return 'VARCHAR(10)';
     }
 
     public function convertToPHPValue($value, AbstractPlatform $platform): ?ProductState
     {
-        if ($value === null) {
+        if (null === $value) {
             return null;
         }
+
         return ProductState::from($value);
     }
 
@@ -34,4 +36,3 @@ class ProductStateType extends StringType
         return self::PRODUCT_STATE;
     }
 }
-

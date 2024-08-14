@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Factory;
@@ -12,7 +13,7 @@ class ImportBatchFactory
     {
     }
 
-    public function createAndPersist(): ImportBatch
+    public function createAndSave(): ImportBatch
     {
         $importBatch = new ImportBatch();
         $this->entityManager->persist($importBatch);

@@ -1,11 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
-namespace App\Service\Messenger\SendEmailImportBatch;
+namespace App\MessageHandler;
 
 use App\DTO\ImportBatchDTO;
 
-class SendEmailMessage
+class SendEmailImportBatchMessage
 {
     public function __construct(private readonly ImportBatchDTO $importBatchDTO)
     {

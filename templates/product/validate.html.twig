@@ -5,7 +5,46 @@
 {% block main %}
     <h1>Product Validation</h1>
 
-    {% if pagination.totalItemCount > 0 %}
+    <!-- Table for Products to Validate -->
+    <h2>Products to Validate</h2>
+    {% if productsToValidate is not empty %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Supplier</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for product in productsToValidate %}
+                <tr>
+                    <td>{{ product.id }}</td>
+                    <td>{{ product.code }}</td>
+                    <td>{{ product.description }}</td>
+                    <td>{{ product.price | number_format(2, '.', ',') }} €</td>
+                    <td>{{ product.supplier.name }}</td>
+                    <td>
+                        <!-- Form for Validate Action -->
+                        <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
+                            <input type="hidden" name="action" value="validate">
+                            <button type="submit" class="btn btn-success">Validate</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No products to validate.</p>
+    {% endif %}
+
+    <!-- Table for Products to Approve or Reject -->
+    <h2>Products to Approve or Reject</h2>
+    {% if productsToApproveOrReject is not empty %}
         <table class="table table-striped">
             <thead>
             <tr>
@@ -19,7 +58,7 @@
             </tr>
             </thead>
             <tbody>
-            {% for product in pagination %}
+            {% for product in productsToApproveOrReject %}
                 <tr>
                     <td>{{ product.id }}</td>
                     <td>{{ product.code }}</td>
@@ -27,32 +66,36 @@
                     <td>{{ product.price | number_format(2, '.', ',') }} €</td>
                     <td>{{ product.supplier.name }}</td>
                     <td>
-                        {{ markings[product.id] }}
+                        {% set state = product.state.value %}
+                        <span class="badge {% if state == 'valid' %}badge-success{% elseif state == 'validating' %}badge-warning{% elseif state == 'approve' %}badge-primary{% elseif state == 'new' %}badge-secondary{% endif %}">
+                            {{ state | capitalize }}
+                        </span>
                     </td>
                     <td>
-                        <!-- Form for Validate Action -->
-                        <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('validate_' ~ product.id) }}">
-                            <input type="hidden" name="action" value="validate">
-                            <button type="submit" class="btn btn-success">Validate</button>
-                        </form>
+                        <!-- Forms for Approve or Reject Action -->
+                        {% if state == 'validating' %}
+                            <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
+                                <input type="hidden" name="action" value="approve">
+                                <button type="submit" class="btn btn-primary">Approve</button>
+                            </form>
 
-                        <!-- Form for Reject Action -->
-                        <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('reject_' ~ product.id) }}">
-                            <input type="hidden" name="action" value="reject">
-                            <button type="submit" class="btn btn-danger">Reject</button>
-                        </form>
+                            <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="btn btn-danger">Reject</button>
+                            </form>
+                        {% elseif state == 'approve' %}
+                            <!-- Form for Mark as Valid -->
+                            <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
+                                <input type="hidden" name="action" value="valid">
+                                <button type="submit" class="btn btn-info">Mark as Valid</button>
+                            </form>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
-
-        <div class="pagination">
-            {{ knp_pagination_render(pagination) }}
-        </div>
     {% else %}
-        <p>No products to validate.</p>
+        <p>No products to approve or reject.</p>
     {% endif %}
 {% endblock %}

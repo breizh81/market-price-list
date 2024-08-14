@@ -13,11 +13,8 @@ services:
     depends_on:
       - db
       - rabbitmq
-    environment:
-      - DATABASE_URL=pgsql://breizh81:Pwdpostgres022023!*@db:5432/market-price-list?serverVersion=12&charset=utf8
-      - MESSENGER_TRANSPORT_DSN=amqp://guest:guest@rabbitmq:5672/%2f
-      - MESSENGER_TRANSPORT_VHOST=/
-      - MAILER_DSN=smtp://mailhog:1025
+    env_file:
+      - .env
     networks:
       - app-network
 

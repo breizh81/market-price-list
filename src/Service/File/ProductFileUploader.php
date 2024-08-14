@@ -9,7 +9,7 @@ use App\Exception\InvalidFileTypeException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class FileUploader
+class ProductFileUploader
 {
     public function __construct(
         private readonly string $targetDirectory,
@@ -21,7 +21,7 @@ class FileUploader
     public function upload(UploadedFile $file): string
     {
         try {
-            $newFileName = uniqid().'.'.$file->getClientOriginalExtension();
+            $newFileName = uniqid() . '.' . $file->getClientOriginalExtension();
             $fileType = $this->detect($file->getClientOriginalName());
 
             $this->validateFileType($fileType);
@@ -32,7 +32,7 @@ class FileUploader
 
             $file->move($this->targetDirectory, $newFileName);
 
-            return $this->targetDirectory.\DIRECTORY_SEPARATOR.$newFileName;
+            return $this->targetDirectory . \DIRECTORY_SEPARATOR . $newFileName;
         } catch (\Exception $e) {
             $this->logger->error('File upload failed', [
                 'error' => $e->getMessage(),

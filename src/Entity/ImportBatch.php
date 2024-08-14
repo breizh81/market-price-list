@@ -13,7 +13,8 @@ class ImportBatch
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    // @phpstan-ignore-next-line
+    private int $id;
 
     #[ORM\Column(type: 'boolean')]
     private bool $isCompleted = false;
@@ -54,7 +55,7 @@ class ImportBatch
         return $this->totalMessages;
     }
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }

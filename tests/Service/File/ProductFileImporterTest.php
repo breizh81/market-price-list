@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace tests\Service\File;
+namespace App\Tests\Service\File;
 
-use App\Service\File\FileImporter;
+use App\Service\File\ProductFileImporter;
 use PHPUnit\Framework\TestCase;
 
-class FileImporterTest extends TestCase
+class ProductFileImporterTest extends TestCase
 {
     private $importer;
     private $fileImporter;
@@ -15,7 +15,7 @@ class FileImporterTest extends TestCase
     protected function setUp(): void
     {
         $this->importer = $this->createMock('App\Service\File\ImporterInterface');
-        $this->fileImporter = new FileImporter();
+        $this->fileImporter = new ProductFileImporter();
         $this->fileImporter->setImporters([$this->importer]);
     }
 

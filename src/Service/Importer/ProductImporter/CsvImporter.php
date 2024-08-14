@@ -7,7 +7,6 @@ namespace App\Service\Importer\ProductImporter;
 use App\DTO\ImportBatchDTO;
 use App\DTO\ProductDTO;
 use App\DTO\SupplierDTO;
-use App\Entity\IdentifiableEntityInterface;
 use App\Entity\Supplier;
 use App\Factory\ImportBatchFactory;
 use App\Service\Messenger\InsertProduct\InsertProductMessage;
@@ -28,16 +27,10 @@ class CsvImporter implements ImporterInterface
         return self::FILE_EXTENSION === $fileExtension;
     }
 
-    public function import(string $filePath, IdentifiableEntityInterface $supplier): void
+    public function import(string $filePath, Supplier $supplier): void
     {
-        if (!$supplier instanceof Supplier) {
-            throw new \InvalidArgumentException(
-                \sprintf('Expected supplier of type Supplier, %s given', $supplier::class)
-            );
-        }
-
         $file = new \SplFileObject($filePath, 'r');
-        $importBatch = $this->importBatchFactory->createAndPersist();
+        $importBatch = $this->importBatchFactory->createAndSave();
         $importBatchDTO = ImportBatchDTO::fromEntity($importBatch);
 
         $importBatch->setTotalMessages(0);

@@ -12,12 +12,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SupplierRepository::class)]
 #[ORM\Table(name: 'supplier')]
-class Supplier implements IdentifiableEntityInterface
+class Supplier
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    private readonly int $id;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'supplier.blank_name')]
@@ -31,7 +31,7 @@ class Supplier implements IdentifiableEntityInterface
         $this->products = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
     }
@@ -48,6 +48,11 @@ class Supplier implements IdentifiableEntityInterface
         return $this;
     }
 
+    /**
+     * Get the products associated with the supplier.
+     *
+     * @return Collection<int, Product>
+     */
     public function getProducts(): Collection
     {
         return $this->products;

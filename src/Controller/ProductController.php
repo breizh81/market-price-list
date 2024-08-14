@@ -7,10 +7,10 @@ namespace App\Controller;
 use App\Entity\Product;
 use App\Repository\ProductRepository;
 use App\Service\Paginator\ProductPaginator;
+use App\Service\PhotoGallery\ProductPhotos;
 use App\Service\Workflow\ProductCoordinator;
 use App\Service\Workflow\ProductMarkingCoordinator;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +23,8 @@ class ProductController extends AbstractController
         private readonly ProductCoordinator $workflowCoordinator,
         private readonly EntityManagerInterface $entityManager,
         private readonly ProductMarkingCoordinator $productMarkingCoordinator,
-        private readonly ProductPaginator $productPaginator
+        private readonly ProductPaginator $productPaginator,
+        private readonly ProductPhotos $productPhotos
     ) {
     }
 
@@ -42,7 +43,13 @@ class ProductController extends AbstractController
             10
         );
 
-        return $this->render('product/index.html.twig', ['paginatedProducts' => $pagination]);
+        return $this->render(
+            'product/index.html.twig',
+            [
+                'paginatedProducts' => $pagination,
+                'productPhotos' => $this->productPhotos->getProductPhotos($pagination->getItems()),
+            ]
+        );
     }
 
     #[Route('/products/validate', name: 'product_validate')]
@@ -92,7 +99,7 @@ class ProductController extends AbstractController
             }
 
             $this->entityManager->flush();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->addFlash('error', 'An error occurred: ' . $e->getMessage());
         }
 

@@ -61,7 +61,7 @@ ENV SYMFONY_ENV=dev
 COPY . .
 
 # Install project dependencies without scripts
-RUN composer install --no-scripts --no-dev --prefer-dist
+RUN composer install
 
 # Ensure bin/console is executable
 RUN chmod +x bin/console
@@ -71,6 +71,9 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # List files to verify existence and permissions
 RUN ls -la /var/www/html/bin
+
+# Dump autoload
+RUN composer dump-autoload --optimize
 
 # Expose port 8000 to the outside world
 EXPOSE 8000

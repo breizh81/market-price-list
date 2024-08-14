@@ -1,75 +1,87 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service\File;
 
 use App\Exception\FileUploadException;
-use App\Exception\InvalidFileTypeException;
 use App\Service\File\ProductFileUploader;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-/**
- * ProductFileUploaderTest tests functionality of the ProductFileUploader class.
- */
 class ProductFileUploaderTest extends TestCase
 {
-    private $targetDirectory = '/tmp';
-    private $allowedFileTypes = ['txt'];
-    private $logger;
+    private string $targetDirectory;
+    private array $allowedFileTypes;
+    private LoggerInterface $logger;
+    private ProductFileUploader $uploader;
 
     protected function setUp(): void
     {
+        $this->targetDirectory = '/tmp/uploads';
+        $this->allowedFileTypes = ['csv'];
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->uploader = new ProductFileUploader($this->targetDirectory, $this->allowedFileTypes, $this->logger);
     }
 
-    /**
-     * Tests upload method with valid file type.
-     */
-    public function testUploadWithValidFileType(): void
+    public function testUploadWithValidFile(): void
     {
-        $fileMock = $this->createMock(UploadedFile::class);
-        $fileMock->expects($this->any())->method('getClientOriginalExtension')->willReturn('txt');
-        $fileMock->expects($this->any())->method('getClientOriginalName')->willReturn('test.txt');
-        $fileMock->expects($this->any())->method('move')->willReturnCallback(function ($directory, $filename) {
-            $this->assertSame($this->targetDirectory, $directory);
-            $this->assertMatchesRegularExpression('/[a-z0-9]+\./i', $filename);
-        });
+        $file = $this->createMock(UploadedFile::class);
+        $file->method('getClientOriginalExtension')->willReturn('csv');
+        $file->method('getClientOriginalName')->willReturn('test.csv');
+        $file->expects($this->once())->method('move')->with($this->targetDirectory, 'test.csv');
 
-        $uploader = new ProductFileUploader($this->targetDirectory, $this->logger, $this->allowedFileTypes);
-        $return = $uploader->upload($fileMock);
+        $result = $this->uploader->upload($file);
 
-        $this->assertStringStartsWith($this->targetDirectory, $return);
+        $this->assertStringStartsWith($this->targetDirectory, $result);
     }
 
-    /**
-     * Tests upload method with an unsupported file type.
-     */
-    public function testUploadWithUnsupportedFileType(): void
+    public function testUploadWithInvalidFileType(): void
     {
-        $this->expectException(InvalidFileTypeException::class);
+        $file = $this->createMock(UploadedFile::class);
+        $file->method('getClientOriginalExtension')->willReturn('exe');
+        $file->method('getClientOriginalName')->willReturn('test.exe');
 
-        $fileMock = $this->createMock(UploadedFile::class);
-        $fileMock->expects($this->any())->method('getClientOriginalExtension')->willReturn('docx');
-        $fileMock->expects($this->any())->method('getClientOriginalName')->willReturn('test.docx');
-
-        $uploader = new ProductFileUploader($this->targetDirectory, $this->logger, $this->allowedFileTypes);
-        $uploader->upload($fileMock);
-    }
-
-    /**
-     * Tests upload method in case of an error.
-     */
-    public function testUploadWithError(): void
-    {
         $this->expectException(FileUploadException::class);
+        $this->expectExceptionMessage('File upload failed due to invalid file type.');
 
-        $fileMock = $this->createMock(UploadedFile::class);
-        $fileMock->expects($this->any())->method('getClientOriginalExtension')->willReturn('txt');
-        $fileMock->expects($this->any())->method('getClientOriginalName')->willReturn('test.txt');
-        $fileMock->expects($this->any())->method('move')->willThrowException(new \Exception());
+        $this->uploader->upload($file);
+    }
 
-        $uploader = new ProductFileUploader($this->targetDirectory, $this->logger, $this->allowedFileTypes);
-        $uploader->upload($fileMock);
+    public function testUploadFileTypeInvalid(): void
+    {
+        $file = $this->createMock(UploadedFile::class);
+        $file->method('getClientOriginalExtension')->willReturn('txt');
+        $file->method('getClientOriginalName')->willReturn('test.txt');
+        $file->method('move')->will($this->throwException(new \Exception('Move failed')));
+
+        $this->logger->expects($this->once())->method('error')->with('File upload failed', [
+            'error' => 'The file type "txt" is not supported.',
+            'file' => 'test.txt',
+        ]);
+
+        $this->expectException(FileUploadException::class);
+        $this->expectExceptionMessage('File upload failed');
+
+        $this->uploader->upload($file);
+    }
+
+    public function testUploadWithException(): void
+    {
+        $file = $this->createMock(UploadedFile::class);
+        $file->method('getClientOriginalExtension')->willReturn('csv');
+        $file->method('getClientOriginalName')->willReturn('test.csv');
+        $file->method('move')->will($this->throwException(new \Exception('Move failed')));
+
+        $this->logger->expects($this->once())->method('error')->with('File upload failed', [
+            'error' => 'Move failed',
+            'file' => 'test.csv',
+        ]);
+
+        $this->expectException(FileUploadException::class);
+        $this->expectExceptionMessage('File upload failed');
+
+        $this->uploader->upload($file);
     }
 }

@@ -81,12 +81,7 @@ class InsertProductMessageHandler
                 'error' => $e->getMessage(),
             ]);
 
-            throw new ProductProcessingException(
-                'Unexpected error occurred while processing the product',
-                $productDto->getCode(),
-                0,
-                $e
-            );
+            throw new ProductProcessingException('Unexpected error occurred while processing the product', $productDto->getCode(), 0, $e);
         }
     }
 }

@@ -34,7 +34,7 @@ class ImportBatchDTO
     /**
      * Converts the DTO to an associative array.
      *
-     * @return array<string, int|bool> The associative array representation of the DTO.
+     * @return array<string, int|bool> the associative array representation of the DTO
      */
     public function toArray(): array
     {

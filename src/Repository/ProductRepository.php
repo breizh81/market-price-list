@@ -7,7 +7,6 @@ namespace App\Repository;
 use App\Entity\Product;
 use App\Enum\ProductState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 

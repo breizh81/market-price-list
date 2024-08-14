@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service\Validator;
 
-use App\Exception\ProductImportException;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use App\Entity\Supplier;
+use App\Exception\ProductImportException;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ProductImportValidator
 {

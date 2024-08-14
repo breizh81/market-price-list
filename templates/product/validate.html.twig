@@ -5,7 +5,6 @@
 {% block main %}
     <h1>Product Validation</h1>
 
-    <!-- Table for Products to Validate -->
     <h2>Products to Validate</h2>
     {% if productsToValidate is not empty %}
         <table class="table table-striped">
@@ -28,7 +27,6 @@
                     <td>{{ product.price | number_format(2, '.', ',') }} €</td>
                     <td>{{ product.supplier.name }}</td>
                     <td>
-                        <!-- Form for Validate Action -->
                         <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
                             <input type="hidden" name="action" value="validate">
                             <button type="submit" class="btn btn-success">Validate</button>
@@ -42,7 +40,6 @@
         <p>No products to validate.</p>
     {% endif %}
 
-    <!-- Table for Products to Approve or Reject -->
     <h2>Products to Approve or Reject</h2>
     {% if productsToApproveOrReject is not empty %}
         <table class="table table-striped">
@@ -72,7 +69,6 @@
                         </span>
                     </td>
                     <td>
-                        <!-- Forms for Approve or Reject Action -->
                         {% if state == 'validating' %}
                             <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
                                 <input type="hidden" name="action" value="approve">
@@ -84,7 +80,6 @@
                                 <button type="submit" class="btn btn-danger">Reject</button>
                             </form>
                         {% elseif state == 'approve' %}
-                            <!-- Form for Mark as Valid -->
                             <form action="{{ path('product_validate_action', { id: product.id }) }}" method="post" style="display:inline;">
                                 <input type="hidden" name="action" value="valid">
                                 <button type="submit" class="btn btn-info">Mark as Valid</button>

@@ -11,7 +11,7 @@ use App\Service\Importer\ProductImporter\ImporterInterface;
 class ProductFileImporter
 {
     /**
-     * @var ImporterInterface[] $importers
+     * @var ImporterInterface[]
      */
     private array $importers = [];
 
@@ -23,7 +23,12 @@ class ProductFileImporter
             }
         }
 
-        $this->importers = is_array($importers) ? $importers : iterator_to_array($importers);
+        $this->importers = \is_array($importers) ? $importers : iterator_to_array($importers);
+    }
+
+    public function getImporters(): array
+    {
+        return $this->importers;
     }
 
     public function importFile(string $filePath, Supplier $entity): void

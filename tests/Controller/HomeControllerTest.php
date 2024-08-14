@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Request;
 
 class HomeControllerTest extends WebTestCase
 {
@@ -12,11 +13,10 @@ class HomeControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client->request('GET', '/');
+        $client->request(Request::METHOD_GET, '/');
 
         $this->assertEquals(200, $client->getResponse()->getStatusCode());
 
-        // Check if the homepage contains a specific text (example)
         $this->assertStringContainsString('Welcome to the Home Page', $client->getResponse()->getContent());
     }
 }

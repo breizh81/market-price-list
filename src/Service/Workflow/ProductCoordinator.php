@@ -19,7 +19,6 @@ class ProductCoordinator
     {
         try {
             $this->validate($product);
-            $product->setState(ProductState::VALIDATING);
         } catch (LogicException $e) {
             throw new LogicException($e->getMessage());
         }

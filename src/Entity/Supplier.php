@@ -70,10 +70,8 @@ class Supplier
 
     public function removeProduct(Product $product): static
     {
-        if ($this->products->removeElement($product)) {
-            if ($product->getSupplier() === $this) {
-                $product->setSupplier(null);
-            }
+        if ($this->products->removeElement($product) && $this === $product->getSupplier()) {
+            $product->setSupplier(null);
         }
 
         return $this;

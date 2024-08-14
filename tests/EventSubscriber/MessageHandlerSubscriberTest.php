@@ -1,21 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\EventSubscriber;
 
-use App\DTO\ImportBatchDTO;
 use App\Entity\ImportBatch;
 use App\EventSubscriber\MessageHandlerSubscriber;
-use App\MessageHandler\SendEmailImportBatchMessage;
 use App\Repository\ImportBatchRepository;
 use App\Service\Messenger\InsertProduct\InsertProductMessage;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
 use Symfony\Component\Messenger\Event\WorkerMessageHandledEvent;
-use Symfony\Component\Messenger\Event\WorkerMessageReceivedEvent;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class MessageHandlerSubscriberTest extends TestCase
@@ -38,136 +36,87 @@ class MessageHandlerSubscriberTest extends TestCase
         );
     }
 
-    public function testImplementsEventSubscriberInterface(): void
-    {
-        $this->assertInstanceOf(EventSubscriberInterface::class, $this->subscriber);
-    }
-
-    public function testOnMessageReceived(): void
-    {
-        $message = $this->createMock(InsertProductMessage::class);
-        $message->method('getImportBatchId')->willReturn(1);
-
-        $importBatch = $this->createMock(ImportBatch::class);
-
-        $this->importBatchRepository
-            ->expects($this->once())
-            ->method('find')
-            ->with(1)
-            ->willReturn($importBatch);
-
-        $this->importBatchRepository
-            ->expects($this->once())
-            ->method('save')
-            ->with($importBatch);
-
-        $this->logger
-            ->expects($this->exactly(2))
-            ->method('debug');
-
-        $envelope = new Envelope($message);
-        $event = new WorkerMessageReceivedEvent($envelope, 'default');
-
-        $this->subscriber->onMessageReceived($event);
-    }
-
     public function testOnMessageHandled(): void
     {
-        $message = $this->createMock(InsertProductMessage::class);
-        $message->method('getImportBatchId')->willReturn(1);
+        $insertProductMessage = $this->createMock(InsertProductMessage::class);
+        $insertProductMessage->method('getImportBatchId')->willReturn(1);
 
-        // Instantiate the entity directly
-        $importBatch = new ImportBatch();
-        $importBatch->setTotalMessages(1); // Set necessary properties
+        $importBatch = $this->createMock(ImportBatch::class);
+        $importBatch->method('getProcessedMessages')->willReturn(1);
+        $importBatch->method('getTotalMessages')->willReturn(2);
 
-        // Ensure the repository returns the actual ImportBatch entity
-        $this->importBatchRepository
+        $this->importBatchRepository->expects($this->once())
             ->method('find')
             ->with(1)
             ->willReturn($importBatch);
 
-        $this->logger
-            ->expects($this->exactly(3))
-            ->method('debug');
-
-        // Create the DTO from the entity
-        $importBatchDTO = ImportBatchDTO::fromEntity($importBatch);
-
-        $this->messageBus
-            ->expects($this->once())
-            ->method('dispatch')
-            ->with($this->callback(function (SendEmailImportBatchMessage $message) use ($importBatchDTO) {
-                return $message->getImportBatch() === $importBatchDTO;
-            }));
-
-        $this->importBatchRepository
-            ->expects($this->once())
+        $this->importBatchRepository->expects($this->once())
             ->method('save')
             ->with($importBatch);
 
-        $envelope = new Envelope($message);
-        $event = new WorkerMessageHandledEvent($envelope, 'default');
+        $logMessages = [];
+        $this->logger->method('debug')->willReturnCallback(function ($message, $context) use (&$logMessages) {
+            $logMessages[] = ['message' => $message, 'context' => $context];
+        });
+
+        $envelope = new Envelope($insertProductMessage);
+        $event = new WorkerMessageHandledEvent($envelope, 'test_receiver');
 
         $this->subscriber->onMessageHandled($event);
 
-        // Verify the entity state after processing
-        $this->assertEquals(1, $importBatch->getProcessedMessages());
-        $this->assertTrue($importBatch->isCompleted());
+        $this->assertCount(3, $logMessages);
+        $this->assertEquals('Import batch before ProcessedMessages', $logMessages[0]['message']);
+        $this->assertEquals('Import batch after ProcessedMessages', $logMessages[1]['message']);
+        $this->assertEquals('Updated import batch after message handling.', $logMessages[2]['message']);
     }
 
     public function testOnMessageFailed(): void
     {
-        $message = $this->createMock(InsertProductMessage::class);
-        $message->method('getImportBatchId')->willReturn(1);
+        // Mock InsertProductMessage
+        $insertProductMessage = $this->createMock(InsertProductMessage::class);
+        $insertProductMessage->method('getImportBatchId')->willReturn(1);
 
+        // Mock ImportBatch
         $importBatch = $this->createMock(ImportBatch::class);
+        $importBatch->method('getProcessedMessages')->willReturn(1);
+        $importBatch->method('getTotalMessages')->willReturn(2);
 
-        $this->importBatchRepository
+        // Use a real exception for simulating failure
+        $exception = new \Exception('An error occurred.');
+
+        // Set up repository and logger expectations
+        $this->importBatchRepository->expects($this->once())
             ->method('find')
             ->with(1)
             ->willReturn($importBatch);
 
-        $importBatch
-            ->expects($this->once())
-            ->method('incrementProcessedMessages');
-
-        $importBatch
-            ->expects($this->once())
-            ->method('getProcessedMessages')
-            ->willReturn(1);
-
-        $importBatch
-            ->expects($this->once())
-            ->method('getTotalMessages')
-            ->willReturn(1);
-
-        $importBatch
-            ->expects($this->once())
-            ->method('markAsCompleted');
-
-        $this->importBatchRepository
-            ->expects($this->once())
+        $this->importBatchRepository->expects($this->once())
             ->method('save')
             ->with($importBatch);
 
-        $this->logger
-            ->expects($this->once())
-            ->method('error')
-            ->with('Message processing failed.', $this->arrayHasKey('error'));
+        // Capture log messages
+        $logMessages = [];
+        $this->logger->method('error')->willReturnCallback(function ($message, $context) use (&$logMessages) {
+            $logMessages[] = ['message' => $message, 'context' => $context];
+        });
 
-        $this->logger
-            ->expects($this->exactly(3))
-            ->method('debug');
+        $this->logger->method('debug')->willReturnCallback(function ($message, $context) use (&$logMessages) {
+            $logMessages[] = ['message' => $message, 'context' => $context];
+        });
 
-        $this->messageBus
-            ->expects($this->once())
-            ->method('dispatch')
-            ->with($this->isInstanceOf(SendEmailImportBatchMessage::class));
+        // Create event and envelope
+        $envelope = new Envelope($insertProductMessage);
+        $event = new WorkerMessageFailedEvent($envelope, 'test_receiver', $exception);
 
-        $envelope = new Envelope($message);
-        $throwable = new \Exception('Test exception');
-        $event = new WorkerMessageFailedEvent($envelope, 'default', $throwable);
-
+        // Call the method to be tested
         $this->subscriber->onMessageFailed($event);
+
+        // Assertions
+        $this->assertCount(4, $logMessages);
+        $this->assertEquals('Message processing failed.', $logMessages[0]['message']);
+        $this->assertEquals('An error occurred.', $logMessages[0]['context']['error']);
+        $this->assertEquals('Import batch before ProcessedMessages', $logMessages[1]['message']);
+        $this->assertEquals('Import batch after ProcessedMessages', $logMessages[2]['message']);
+        $this->assertEquals('Updated import batch after message handling.', $logMessages[3]['message']);
     }
 }

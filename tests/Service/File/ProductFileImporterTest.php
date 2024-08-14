@@ -4,60 +4,62 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\File;
 
+use App\Entity\Supplier;
+use App\Exception\FileImporterException;
 use App\Service\File\ProductFileImporter;
+use App\Service\Importer\ProductImporter\ImporterInterface;
 use PHPUnit\Framework\TestCase;
 
 class ProductFileImporterTest extends TestCase
 {
     private $importer;
-    private $fileImporter;
+    private $supplier;
+    private $productFileImporter;
 
     protected function setUp(): void
     {
-        $this->importer = $this->createMock('App\Service\File\ImporterInterface');
-        $this->fileImporter = new ProductFileImporter();
-        $this->fileImporter->setImporters([$this->importer]);
+        $this->importer = $this->createMock(ImporterInterface::class);
+        $this->supplier = $this->createMock(Supplier::class);
+        $this->productFileImporter = new ProductFileImporter();
     }
 
-    /**
-     * @dataProvider providerTestImportFile
-     */
-    public function testImportFile(
-        bool $returnValue,
-        string $importFunctionCall,
-        bool $shouldThrowException,
-        string $importFile
-    ): void {
-        $this->importer->expects($this->once())
-            ->method('supports')
-            ->with('csv')
-            ->willReturn($returnValue);
-
-        $this->importer->expects($this->$importFunctionCall())->method('import')->with($importFile);
-
-        if ($shouldThrowException) {
-            $this->expectException(\RuntimeException::class);
-            $this->expectExceptionMessage('No importer found for extension "csv"');
-        }
-
-        // Exercise SUT
-        $this->fileImporter->importFile($importFile);
-    }
-
-    public function providerTestImportFile(): \Generator
+    public function testSetImportersWithValidImporters()
     {
-        yield 'Supported File' => [
-            'returnValue' => true,
-            'importFunctionCall' => 'once',
-            'shouldThrowException' => false,
-            'importFile' => './test.csv',
-        ];
+        $importers = [$this->importer];
+        $this->productFileImporter->setImporters($importers);
 
-        yield 'Unsupported File' => [
-            'returnValue' => false,
-            'importFunctionCall' => 'never',
-            'shouldThrowException' => true,
-            'importFile' => './test.csv',
-        ];
+        $this->assertSame($importers, $this->productFileImporter->getImporters());
+    }
+
+    public function testSetImportersWithInvalidImporter()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('All importers must implement ImporterInterface');
+
+        $invalidImporter = new \stdClass();
+        $this->productFileImporter->setImporters([$invalidImporter]);
+    }
+
+    public function testImportFileWithSupportedExtension()
+    {
+        $filePath = 'test.csv';
+        $this->importer->method('supports')->with('csv')->willReturn(true);
+        $this->importer->expects($this->once())->method('import')->with($filePath, $this->supplier);
+
+        $this->productFileImporter->setImporters([$this->importer]);
+        $this->productFileImporter->importFile($filePath, $this->supplier);
+    }
+
+    public function testImportFileWithUnsupportedExtension()
+    {
+        $filePath = 'test.txt';
+        $this->importer->method('supports')->with('txt')->willReturn(false);
+
+        $this->productFileImporter->setImporters([$this->importer]);
+
+        $this->expectException(FileImporterException::class);
+        $this->expectExceptionMessage('No importer found for extension "txt"');
+
+        $this->productFileImporter->importFile($filePath, $this->supplier);
     }
 }

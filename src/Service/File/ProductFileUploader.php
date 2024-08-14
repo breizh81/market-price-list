@@ -21,37 +21,35 @@ class ProductFileUploader
     public function upload(UploadedFile $file): string
     {
         try {
-            $newFileName = uniqid() . '.' . $file->getClientOriginalExtension();
-            $fileType = $this->detect($file->getClientOriginalName());
-
-            $this->validateFileType($fileType);
+            $extension = $file->getClientOriginalExtension();
+            $this->validateFileType($extension);
 
             if (!is_dir($this->targetDirectory)) {
                 mkdir($this->targetDirectory, 0755, true);
             }
 
-            $file->move($this->targetDirectory, $newFileName);
-
-            return $this->targetDirectory . \DIRECTORY_SEPARATOR . $newFileName;
+            $file->move($this->targetDirectory, $file->getClientOriginalName());
+        } catch (InvalidFileTypeException $e) {
+            $this->logger->error('File upload failed', [
+                'error' => $e->getMessage(),
+                'file' => $file->getClientOriginalName(),
+            ]);
+            throw new FileUploadException('File upload failed due to invalid file type.', 0, $e);
         } catch (\Exception $e) {
             $this->logger->error('File upload failed', [
                 'error' => $e->getMessage(),
                 'file' => $file->getClientOriginalName(),
             ]);
-
             throw new FileUploadException('File upload failed', 0, $e);
         }
+
+        return $this->targetDirectory . \DIRECTORY_SEPARATOR . $file->getClientOriginalName();
     }
 
-    private function validateFileType(string $fileType): void
+    private function validateFileType(string $extension): void
     {
-        if (!\in_array($fileType, $this->allowedFileTypes)) {
-            throw new InvalidFileTypeException(\sprintf('The file type "%s" is not supported.', $fileType));
+        if (!\in_array($extension, $this->allowedFileTypes, true)) {
+            throw new InvalidFileTypeException(\sprintf('The file type "%s" is not supported.', $extension));
         }
-    }
-
-    private function detect(string $filename): string
-    {
-        return pathinfo($filename, \PATHINFO_EXTENSION);
     }
 }

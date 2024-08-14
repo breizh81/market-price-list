@@ -8,7 +8,7 @@ use App\Service\Mailer\Upload\UploadEmail;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
-class SendEmailMessageImportBatchHandler
+class SendEmailImportBatchMessageHandler
 {
     public function __construct(private readonly UploadEmail $emailService)
     {

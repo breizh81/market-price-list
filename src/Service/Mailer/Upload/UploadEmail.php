@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service\Mailer\Upload;
 
 use App\DTO\ImportBatchDTO;
+use App\Exception\UploadEmailException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
@@ -39,6 +40,8 @@ class UploadEmail
                 'importBatchId' => $importBatchDTO->getId(),
                 'error' => $e->getMessage(),
             ]);
+
+            throw new UploadEmailException('Failed to send import batch completion email.', $e->getCode(), $e);
         }
     }
 }

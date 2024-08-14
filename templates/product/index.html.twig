@@ -18,6 +18,7 @@
     <table class="table table-striped">
         <thead>
         <tr>
+            <th>Image</th>
             <th>Code</th>
             <th>Description</th>
             <th>Price</th>
@@ -27,6 +28,16 @@
         <tbody>
         {% for product in paginatedProducts %}
             <tr>
+                <td>
+                    {% if productPhotos[product.id] is defined %}
+                        {% for photo in productPhotos[product.id] %}
+                            <img src="{{ photo.urls.small }}" alt="{{ photo.alt_description }}" />
+                        {% endfor %}
+                    {% else %}
+                        <p>No photos available.</p>
+                    {% endif %}
+                </td>
+
                 <td>{{ product.code }}</td>
                 <td>{{ product.description }}</td>
                 <td>{{ product.price | number_format(2, '.', ',') }} €</td>

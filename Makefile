@@ -43,8 +43,6 @@ phpunit:
 phpunit-coverage:
 	$(DOCKER_ROOT) vendor/bin/phpunit --coverage-html build/coverage
 
-quality-checks: phpcs sniff phpstan
-
 phpcs-fix-dry-run:
 	$(DOCKER_ROOT) $(PHP_CSFIXER_BIN) fix --dry-run
 
@@ -56,9 +54,6 @@ codesniffer-check:
 
 codesniffer-fix:
 	$(DOCKER_ROOT) $(PHPCS_CODESNIFFERFIX_BIN) --standard=phpcs.xml
-
-phpstan:
-	$(DOCKER_ROOT) $(PHPSTAN_BIN) analyse
 
 start: ## Start the project
 	docker compose up -d --build
@@ -77,9 +72,6 @@ add-fixtures:
 
 npm-install: ## Install nodejs dependencies
 	$(DOCKER_ROOT) npm install
-
-assets: ## Build dev assets
-	$(DOCKER_ROOT) npm run dev
 
 encoredev: ## Build dev assets using Encore
 	$(DOCKER_ROOT) ./node_modules/.bin/encore dev

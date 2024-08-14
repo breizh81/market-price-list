@@ -10,7 +10,6 @@ use App\Service\File\ProductFileImporter;
 use App\Service\File\ProductFileUploader;
 use App\Service\Validator\ProductImportValidator;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,9 +20,9 @@ use Symfony\Component\Routing\Annotation\Route;
 class ImportController extends AbstractController
 {
     public function __construct(
-        private readonly ProductFileUploader    $fileUploader,
-        private readonly ProductFileImporter    $fileImporter,
-        private readonly LoggerInterface        $logger,
+        private readonly ProductFileUploader $fileUploader,
+        private readonly ProductFileImporter $fileImporter,
+        private readonly LoggerInterface $logger,
         private readonly EntityManagerInterface $entityManager,
         private readonly ProductImportValidator $productImportValidator
     ) {
@@ -45,7 +44,7 @@ class ImportController extends AbstractController
         try {
             $supplierId = $request->get('supplier');
 
-            if (!is_numeric($supplierId) || intval($supplierId) <= 0) {
+            if (!is_numeric($supplierId) || (int) $supplierId <= 0) {
                 throw new ProductImportException('Invalid supplier ID');
             }
 
@@ -61,7 +60,7 @@ class ImportController extends AbstractController
             return new JsonResponse(['status' => 'File import has been queued']);
         } catch (ProductImportException $e) {
             return new JsonResponse(['status' => $e->getMessage()], 400);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->emergency($e->getMessage());
 
             return new JsonResponse(['status' => 'An error occurred during file import'], 500);

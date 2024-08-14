@@ -6,6 +6,7 @@
 parameters:
     allowed_file_types: ['csv']
     target_directory: '%env(FILE_UPLOAD_DIRECTORY)%'
+    page_size: '%env(int:PAGE_SIZE)%'
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -60,3 +61,11 @@ services:
     App\Service\Workflow\ProductMarkingCoordinator:
         arguments:
             $productValidationStateMachine: '@workflow.product_validation_state_machine'
+
+    App\Service\Unsplash\SearchPhotos:
+        arguments:
+            $apiKey: '%env(UNSPLASH_API_KEY)%'
+
+    App\Service\Unsplash\RateLimiter:
+        arguments:
+            $maxCallsPerHour: '%env(int:UNSPLASH_MAX_CALLS)%'

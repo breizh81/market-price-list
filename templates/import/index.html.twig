@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+{% block main %}
+<h1>Import File and Validate</h1>
+
+<form id="importForm">
+    <!-- File Input Button -->
+    <div>
+        <label for="fileInput">Import File:</label>
+        <input type="file" id="fileInput" name="fileInput" accept=".csv, .xlsx">
+    </div>
+
+    <!-- Select List -->
+    <div>
+        <label for="selectList">Select a Supplier:</label>
+        <select id="selectList" name="selectList">
+            {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Validate Button -->
+    <div>
+        <button type="button" id="validateButton">Validate</button>
+    </div>
+</form>
+
+<!-- Optional: Display the selected file name -->
+<p id="fileName"></p>
+
+{% endblock %}

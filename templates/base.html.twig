@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale }}">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{% block title %}Foodomarket{% endblock %}</title>
+    {% block stylesheets %}
+        {{ encore_entry_link_tags('app-css') }}
+    {% endblock %}
+    {% block javascripts %}
+        {{ encore_entry_script_tags('app-js') }}
+    {% endblock %}
+</head>
+
+<body>
+{% include 'partials/navigation.html.twig' %}
+<div class="container body-container">
+    {% block body %}
+
+        {% for type, messages in app.flashes %}
+            {% if type == 'success' %}
+                <div class="flash flash-success">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% elseif type == 'error' %}
+                <div class="flash flash-error">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% elseif type == 'info' %}
+                <div class="flash flash-info">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="row">
+            <div id="main" class="col-sm-9">
+
+                {% block main %}{% endblock %}
+            </div>
+        </div>
+    {% endblock %}
+</div>
+
+{% block footer %}
+    <footer class="container">
+        <div class="footer">
+            <span class="text-muted">© {{ "now"|date("Y") }} Foodomarket. All rights reserved.</span>
+        </div>
+    </footer>
+{% endblock %}
+</body>
+</html>

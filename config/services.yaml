@@ -1,0 +1,71 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    allowed_file_types: ['csv']
+    target_directory: '%env(FILE_UPLOAD_DIRECTORY)%'
+    page_size: '%env(int:PAGE_SIZE)%'
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Dto/'
+
+    app.csv_importer:
+        class: App\Service\Importer\ProductImporter\CsvImporter
+        tags:
+            - 'app.importer'
+
+    App\Service\File\ProductFileUploader:
+        arguments:
+            $targetDirectory: '%target_directory%'
+            $allowedFileTypes: '%allowed_file_types%'
+            $logger: '@logger'
+
+    App\Service\File\ProductFileImporter:
+        calls:
+            - setImporters: [ !tagged_iterator 'app.importer' ]
+
+    App\Service\Mailer\Upload\UploadEmail:
+        arguments:
+            $mailer: '@mailer.mailer'
+            $logger: '@logger'
+            $senderEmail: '%env(MAILER_SENDER_EMAIL)%'
+            $recipientEmail: '%env(MAILER_RECIPIENT_EMAIL)%'
+
+    App\Service\Workflow\ProductCoordinator:
+        arguments:
+            $productValidationStateMachine: '@workflow.product_validation_state_machine'
+
+    workflow.product_validation_state_machine:
+        class: Symfony\Component\Workflow\StateMachine
+        arguments:
+            $definition: '@state_machine.product_validation.definition'
+
+    App\EventSubscriber\MessageHandlerSubscriber:
+        tags:
+            - { name: 'kernel.event_subscriber' }
+
+    App\Service\Workflow\ProductMarkingCoordinator:
+        arguments:
+            $productValidationStateMachine: '@workflow.product_validation_state_machine'
+
+    App\Service\Unsplash\SearchPhotos:
+        arguments:
+            $apiKey: '%env(UNSPLASH_API_KEY)%'
+
+    App\Service\Unsplash\RateLimiter:
+        arguments:
+            $maxCallsPerHour: '%env(int:UNSPLASH_MAX_CALLS)%'

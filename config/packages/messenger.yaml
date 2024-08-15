@@ -1,0 +1,11 @@
+# config/packages/messenger.yaml
+framework:
+    messenger:
+        transports:
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    vhost: '%env(MESSENGER_TRANSPORT_VHOST)%'
+        routing:
+            'App\Service\Messenger\InsertProduct\InsertProductMessage': async
+            'App\MessageHandler\SendEmailImportBatchMessage': async

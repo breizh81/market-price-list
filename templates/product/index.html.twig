@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+{% block title %}Product Search{% endblock %}
+{% block main %}
+    <h1>Product Search</h1>
+
+    <form action="{{ path('products') }}" method="get" class="mb-4">
+        <div class="form-group">
+            <label for="search">Search</label>
+            <input type="text" id="search" name="search" class="form-control" value="{{ app.request.get('search') }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+
+    <div class="pagination mb-4">
+        {{ knp_pagination_render(paginatedProducts) }}
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Image</th>
+            <th>Code</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Supplier</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for product in paginatedProducts %}
+            <tr>
+                <td>
+                    {% if productPhotos[product.id] is defined %}
+                        {% for photo in productPhotos[product.id] %}
+                            <img src="{{ photo.urls.small }}" alt="{{ photo.alt_description }}" />
+                        {% endfor %}
+                    {% else %}
+                        <p>No photos available.</p>
+                    {% endif %}
+                </td>
+
+                <td>{{ product.code }}</td>
+                <td>{{ product.description }}</td>
+                <td>{{ product.price | number_format(2, '.', ',') }} €</td>
+                <td>{{ product.supplier.name }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4" class="text-center">No products found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        {{ knp_pagination_render(paginatedProducts) }}
+    </div>
+{% endblock %}

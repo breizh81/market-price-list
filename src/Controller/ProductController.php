@@ -100,7 +100,7 @@ class ProductController extends AbstractController
 
             $this->entityManager->flush();
         } catch (\Exception $e) {
-            $this->addFlash('error', 'An error occurred: ' . $e->getMessage());
+            $this->addFlash('error', 'An error occurred: '.$e->getMessage());
         }
 
         return $this->redirectToRoute('product_validate');

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 class RateLimiterTest extends TestCase
 {
-    public function testCheckRateLimitDoesNotThrowExceptionWhenUnderLimit(): void
+    public function testCheckRateLimitAllowsCallsWithinLimit(): void
     {
         $rateLimiter = new RateLimiter(50);
 
@@ -19,11 +19,10 @@ class RateLimiterTest extends TestCase
         }
 
         $this->expectNotToPerformAssertions();
-
         $rateLimiter->checkRateLimit();
     }
 
-    public function testCheckRateLimitThrowsExceptionWhenOverLimit(): void
+    public function testCheckRateLimitBlocksCallsExceedingLimit(): void
     {
         $rateLimiter = new RateLimiter(50);
 
@@ -39,18 +38,23 @@ class RateLimiterTest extends TestCase
 
     public function testCheckRateLimitAllowsNewCallsAfterAnHour(): void
     {
-        $rateLimiter = new RateLimiter(50);
+        $rateLimiter = new RateLimiter(2);
 
-        for ($i = 0; $i < 50; ++$i) {
-            $rateLimiter->logApiCall();
-        }
+        // Simulate 2 API calls, with the first one being an hour ago
+        $this->simulateApiCall($rateLimiter, time() - 3601); // 1 hour and 1 second ago
+        $rateLimiter->logApiCall(); // Recent call
 
-        sleep(1);
-
-        $rateLimiter->checkRateLimit();
-
+        // Should not throw an exception because the first call is older than an hour
         $this->expectNotToPerformAssertions();
+        $rateLimiter->checkRateLimit();
+    }
 
-        $rateLimiter->logApiCall();
+    private function simulateApiCall(RateLimiter $rateLimiter, int $timestamp): void
+    {
+        $reflection = new \ReflectionClass($rateLimiter);
+        $property = $reflection->getProperty('apiCallTimestamps');
+        $timestamps = $property->getValue($rateLimiter);
+        $timestamps[] = $timestamp;
+        $property->setValue($rateLimiter, $timestamps);
     }
 }

@@ -23,7 +23,7 @@ class RateLimiter
         );
 
         if (\count($this->apiCallTimestamps) >= $this->maxCallsPerHour) {
-            throw new SearchPhotosException(429, 'Rate limit exceeded: Only ' . $this->maxCallsPerHour . ' API calls are allowed per hour');
+            throw new SearchPhotosException(429, 'Rate limit exceeded: Only '.$this->maxCallsPerHour.' API calls are allowed per hour');
         }
     }
 

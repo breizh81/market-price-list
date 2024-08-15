@@ -43,7 +43,7 @@ class ProductFileUploader
             throw new FileUploadException('File upload failed', 0, $e);
         }
 
-        return $this->targetDirectory . \DIRECTORY_SEPARATOR . $file->getClientOriginalName();
+        return $this->targetDirectory.\DIRECTORY_SEPARATOR.$file->getClientOriginalName();
     }
 
     private function validateFileType(string $extension): void

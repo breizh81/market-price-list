@@ -1,4 +1,5 @@
-.PHONY: bash-root composer-install help install start stop restart add-migrations quality-checks assets dev encoredev encoreprod stopwatch npm-install
+.PHONY: bash-root composer-install help install start stop restart add-fixtures quality-checks assets dev encoredev encoreprod stopwatch npm-install phpunit phpunit-coverage phpunit-setup phpunit-schema phpunit-fixtures
+
 .DEFAULT_GOAL := help
 
 CONTAINER_NAME = symfony-market-price-list
@@ -12,11 +13,8 @@ OK_COLOR=\033[92m
 OK_STRING=$(OK_COLOR)[OK]$(OK_COLOR) 😀
 
 PHP_CSFIXER_BIN = vendor/bin/php-cs-fixer
-PHP_INSIGHTS_BIN = vendor/bin/phpinsights
-PHPSTAN_BIN = vendor/bin/phpstan
 PHPCS_BIN = vendor/bin/phpcs
 PHPCS_CODESNIFFERFIX_BIN = vendor/bin/phpcbf
-PSALM_BIN = vendor/bin/psalm
 
 get-container-id:
 	@echo "Container ID: $(DOCKER_CONTAINER_ID)"
@@ -37,24 +35,6 @@ cache-clear:
 	$(DOCKER_ROOT) php bin/console cache:clear --no-warmup
 	$(DOCKER_ROOT) php bin/console cache:warmup
 
-phpunit:
-	$(DOCKER_ROOT) vendor/bin/phpunit
-
-phpunit-coverage:
-	$(DOCKER_ROOT) vendor/bin/phpunit --coverage-html build/coverage
-
-phpcs-fix-dry-run:
-	$(DOCKER_ROOT) $(PHP_CSFIXER_BIN) fix --dry-run
-
-phpcs-fix:
-	$(DOCKER_ROOT) $(PHP_CSFIXER_BIN) fix
-
-codesniffer-check:
-	$(DOCKER_ROOT) $(PHPCS_BIN) --standard=phpcs.xml
-
-codesniffer-fix:
-	$(DOCKER_ROOT) $(PHPCS_CODESNIFFERFIX_BIN) --standard=phpcs.xml
-
 start: ## Start the project
 	docker compose up -d --build
 	@echo "$(OK_STRING) The web app should be accessible on http://localhost:8000"
@@ -64,6 +44,7 @@ stop: ## Stop the project
 
 restart: stop start
 
+# Development commands
 add-migrations:
 	$(DOCKER_ROOT) bin/console doctrine:migrations:migrate --no-interaction
 
@@ -72,6 +53,9 @@ add-fixtures:
 
 npm-install: ## Install nodejs dependencies
 	$(DOCKER_ROOT) npm install
+
+npm-saas:
+	$(DOCKER_ROOT) npm install sass-loader@^14.0.0 sass --save-dev
 
 encoredev: ## Build dev assets using Encore
 	$(DOCKER_ROOT) ./node_modules/.bin/encore dev
@@ -85,5 +69,31 @@ consumer-logs:
 webserver-logs:
 	docker exec -ti $(DOCKER_CONTAINER_ID) tail -f /var/log/supervisor/php.log
 
-help:
-	@grep -E '(^[a-zA-Z_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
+# Testing commands
+phpunit: ## Run tests
+	$(DOCKER_ROOT) bin/phpunit
+
+phpunit-coverage: ## Run tests with coverage report
+	$(DOCKER_ROOT) vendor/bin/phpunit --coverage-html build/coverage
+
+phpunit-schema: ## Set up the test database schema
+	$(DOCKER_ROOT) php bin/console doctrine:schema:update --force --env=test
+
+phpunit-fixtures: ## Load fixtures for the test database
+	$(DOCKER_ROOT) php bin/console doctrine:fixtures:load --no-interaction --env=test
+
+phpunit-setup: ## Set up the test database schema and load fixtures
+	$(DOCKER_ROOT) php bin/console doctrine:schema:update --force --env=test
+	$(DOCKER_ROOT) php bin/console doctrine:fixtures:load --no-interaction --env=test
+
+phpcs-fix-dry-run:
+	$(DOCKER_ROOT) $(PHP_CSFIXER_BIN) fix --dry-run
+
+phpcs-fix:
+	$(DOCKER_ROOT) $(PHP_CSFIXER_BIN) fix
+
+codesniffer-check:
+	$(DOCKER_ROOT) $(PHPCS_BIN) --standard=phpcs.xml
+
+codesniffer-fix:
+	$(DOCKER_ROOT) $(PHPCS_CODESNIFFERFIX_BIN) --standard=phpcs.xml

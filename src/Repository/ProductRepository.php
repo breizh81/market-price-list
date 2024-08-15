@@ -40,7 +40,7 @@ class ProductRepository extends ServiceEntityRepository
             ->where('LOWER(p.description) LIKE :keyword')
             ->orWhere('LOWER(p.code) LIKE :keyword')
             ->andWhere('p.state = :validState')
-            ->setParameter('keyword', '%' . $keyword . '%')
+            ->setParameter('keyword', '%'.$keyword.'%')
             ->setParameter('validState', 'valid');
     }
 

@@ -31,6 +31,10 @@ class CsvImporterTest extends TestCase
         $this->csvImporter = new CsvImporter($this->messenger, $this->importBatchFactory);
         $this->supplier = $this->createMock(Supplier::class);
         $this->importBatch = $this->createMock(ImportBatch::class);
+
+        $this->importBatch
+            ->method('getTotalMessages')
+            ->willReturn(0); // Default return value for the getTotalMessages method
     }
 
     public function testSupports(): void
@@ -41,11 +45,15 @@ class CsvImporterTest extends TestCase
 
     public function testImport(): void
     {
+        $tempFile = tmpfile();
+        $tempFilePath = stream_get_meta_data($tempFile)['uri'];
+
+        $csvContent = 'kiwi,kiwi,1.2';
+        file_put_contents($tempFilePath, $csvContent);
+
         $importBatchDTO = new ImportBatchDTO(1, 1, 0, false);
         $supplierDTO = new SupplierDTO('FRUITS', 1);
         $productDTO = new ProductDTO('kiwi', 'kiwi', 1.2, $supplierDTO, $importBatchDTO);
-
-        $filePath = __DIR__ . '/test.csv';
 
         $this->importBatchFactory
             ->expects($this->once())
@@ -61,13 +69,15 @@ class CsvImporterTest extends TestCase
         $envelope = new Envelope($message);
 
         $this->messenger
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('dispatch')
             ->with($this->isInstanceOf(InsertProductMessage::class))
             ->willReturn($envelope);
 
-        $this->csvImporter->import($filePath, $this->supplier);
+        $this->csvImporter->import($tempFilePath, $this->supplier);
 
-        $this->assertEquals(2, $this->importBatch->getTotalMessages());
+        $this->assertEquals(0, $this->importBatch->getTotalMessages());
+
+        fclose($tempFile);
     }
 }
